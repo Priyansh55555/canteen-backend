@@ -1,0 +1,79 @@
+import Food from "../models/Food.js";
+
+// -------------------------------------------
+// Get all menu items
+// -------------------------------------------
+export const getAllMenuItems = async (req, res) => {
+  try {
+    const items = await Food.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: items.length,
+      data: items,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch menu items",
+      error: error.message,
+    });
+  }
+};
+
+// -------------------------------------------
+// Get single menu item by ID
+// -------------------------------------------
+export const getMenuItemById = async (req, res) => {
+  try {
+    const item = await Food.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Menu item not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: item,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching menu item",
+      error: error.message,
+    });
+  }
+};
+
+// -------------------------------------------
+// Search menu items by keyword
+// name, category, description
+// -------------------------------------------
+export const searchMenu = async (req, res) => {
+  try {
+    const keyword = req.params.keyword;
+
+    const items = await Food.find({
+      $or: [
+        { name: { $regex: keyword, $options: "i" } },
+        { category: { $regex: keyword, $options: "i" } },
+        { description: { $regex: keyword, $options: "i" } },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      count: items.length,
+      data: items,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Search failed",
+      error: error.message,
+    });
+  }
+};
