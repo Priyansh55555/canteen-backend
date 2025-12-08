@@ -1,6 +1,6 @@
 import express from "express";
 import upload from "../middleware/upload.middleware.js";
-import  authAdmin  from "../middleware/auth.middleware.js";
+import  { authAdmin }  from "../middleware/auth.middleware.js";
 
 import {
   createFoodItem,
