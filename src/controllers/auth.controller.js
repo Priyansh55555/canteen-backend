@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
@@ -14,7 +14,7 @@ export const registerUser = async (req, res) => {
 
     res.json({ success: true, message: "User registered.", user });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };
 
@@ -41,8 +41,8 @@ export const loginUser = async (req, res) => {
     res
       .cookie("token", token, {
         httpOnly: true,        // cannot be accessed by JS in browser
-        secure: process.env.NODE_ENV === "production", // https only in prod
-        sameSite: "strict",    // CSRF protection
+        secure: true || process.env.NODE_ENV === "production", // https only in prod
+       //  sameSite: "strict",    // CSRF protection
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .status(200)
@@ -61,3 +61,24 @@ export const loginUser = async (req, res) => {
   }
 };
 
+export const logoutUser = (req, res) => {
+  try {
+    res.clearCookie("token");
+    res.status(200).json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getUser = async (req, res) => {
+  try {
+  console.log("user", req.user)
+    const user = await User.findById(req.user.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    res.status(200).json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
