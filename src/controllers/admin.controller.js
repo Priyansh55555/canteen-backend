@@ -9,7 +9,7 @@ import cloudinary from "../config/cloudinary.js";
 // ---------------------------------------------------------
 export const createFoodItem = async (req, res) => {
   try {
-    const { name, price, category, description } = req.body;
+    const { name, price, category, description, isAvailable } = req.body;
 
     let imageUrl = "";
     if (req.file) {
@@ -22,6 +22,7 @@ export const createFoodItem = async (req, res) => {
       price,
       category,
       description,
+      isAvailable,
       image: imageUrl,
     });
 
@@ -85,20 +86,29 @@ export const deleteFoodItem = async (req, res) => {
 
     const food = await Food.findById(id);
     if (!food) {
-      return res.status(404).json({ success: false, message: "Food not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Food not found",
+      });
     }
 
-    // Optional: delete image from Cloudinary
+    // Delete image from Cloudinary (if exists)
     if (food.image) {
       const publicId = food.image.split("/").pop().split(".")[0];
       await cloudinary.uploader.destroy(`canteen_items/${publicId}`);
     }
 
-    await food.remove();
+    await Food.findByIdAndDelete(id);
 
-    res.json({ success: true, message: "Food item deleted" });
+    return res.json({
+      success: true,
+      message: "Food item deleted",
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
