@@ -1,4 +1,4 @@
-import Food from "../models/Food.js";
+import MenuItem from "../models/MenuItem.js";
 import Order from "../models/Order.js";
 import Token from "../models/Token.js";
 import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
@@ -17,7 +17,7 @@ export const createFoodItem = async (req, res) => {
       imageUrl = uploaded.secure_url;
     }
 
-    const food = await Food.create({
+    const food = await MenuItem.create({
       name,
       price,
       category,
@@ -43,9 +43,9 @@ export const updateFoodItem = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const food = await Food.findById(id);
+    const food = await MenuItem.findById(id);
     if (!food) {
-      return res.status(404).json({ success: false, message: "Food not found" });
+      return res.status(404).json({ success: false, message: "MenuItem not found" });
     }
 
     const { name, price, category, description, isAvailable } = req.body;
@@ -84,7 +84,7 @@ export const deleteFoodItem = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const food = await Food.findById(id);
+    const food = await MenuItem.findById(id);
     if (!food) {
       return res.status(404).json({
         success: false,
@@ -98,7 +98,7 @@ export const deleteFoodItem = async (req, res) => {
       await cloudinary.uploader.destroy(`canteen_items/${publicId}`);
     }
 
-    await Food.findByIdAndDelete(id);
+    await MenuItem.findByIdAndDelete(id);
 
     return res.json({
       success: true,
