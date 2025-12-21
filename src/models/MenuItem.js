@@ -1,11 +1,41 @@
 import mongoose from "mongoose";
 
-const menuItemSchema = new mongoose.Schema({
-  itemName: String,
-  price: Number,
-  category: String,
-  image: String,
-  availability: { type: Boolean, default: true }
-}, { timestamps: true });
+const MenuItemSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Menu Item name is required"],
+      trim: true,
+    },
 
-export default mongoose.model("MenuItem", menuItemSchema);
+    price: {
+      type: Number,
+      required: [true, "Menu Item price is required"],
+    },
+
+    category: {
+      type: String,
+      required: [true, "Category is required"],
+      trim: true,
+    },
+
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    image: {
+      type: String, // Cloudinary image URL
+      default: "",
+    },
+
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model("MenuItem", MenuItemSchema);

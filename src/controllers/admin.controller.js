@@ -1,4 +1,4 @@
-import Food from "../models/Food.js";
+import MenuItem from "../models/MenuItem.js";
 import Order from "../models/Order.js";
 import Token from "../models/Token.js";
 import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
@@ -9,7 +9,7 @@ import cloudinary from "../config/cloudinary.js";
 // ---------------------------------------------------------
 export const createFoodItem = async (req, res) => {
   try {
-    const { name, price, category, description } = req.body;
+    const { name, price, category, description, isAvailable } = req.body;
 
     let imageUrl = "";
     if (req.file) {
@@ -17,11 +17,12 @@ export const createFoodItem = async (req, res) => {
       imageUrl = uploaded.secure_url;
     }
 
-    const food = await Food.create({
+    const food = await MenuItem.create({
       name,
       price,
       category,
       description,
+      isAvailable,
       image: imageUrl,
     });
 
@@ -42,9 +43,9 @@ export const updateFoodItem = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const food = await Food.findById(id);
+    const food = await MenuItem.findById(id);
     if (!food) {
-      return res.status(404).json({ success: false, message: "Food not found" });
+      return res.status(404).json({ success: false, message: "MenuItem not found" });
     }
 
     const { name, price, category, description, isAvailable } = req.body;
@@ -83,22 +84,31 @@ export const deleteFoodItem = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const food = await Food.findById(id);
+    const food = await MenuItem.findById(id);
     if (!food) {
-      return res.status(404).json({ success: false, message: "Food not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Food not found",
+      });
     }
 
-    // Optional: delete image from Cloudinary
+    // Delete image from Cloudinary (if exists)
     if (food.image) {
       const publicId = food.image.split("/").pop().split(".")[0];
       await cloudinary.uploader.destroy(`canteen_items/${publicId}`);
     }
 
-    await food.remove();
+    await MenuItem.findByIdAndDelete(id);
 
-    res.json({ success: true, message: "Food item deleted" });
+    return res.json({
+      success: true,
+      message: "Food item deleted",
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 

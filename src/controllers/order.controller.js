@@ -2,6 +2,7 @@ import Order from "../models/Order.js";
 import Token from "../models/Token.js";
 import MenuItem from "../models/MenuItem.js";
 
+
 // ---------------------------------------------------------
 // 1) PLACE ORDER  (Student)
 // ---------------------------------------------------------
@@ -18,8 +19,10 @@ export const placeOrder = async (req, res) => {
 
     // Calculate total amount
     let totalAmount = 0;
+    let filteredItems = [];
     for (let item of items) {
-      const menuItem = await MenuItem.findById(item.menuItemId);
+      const menuItem = await MenuItem.findById(item._id);
+      filteredItems.push({ quantity : item.quantity, menuItemId: item._id });
       if (!menuItem) continue;
       totalAmount += menuItem.price * item.quantity;
     }
@@ -31,7 +34,7 @@ export const placeOrder = async (req, res) => {
     // Create order
     const order = await Order.create({
       userId: req.user.userId,
-      items,
+      items : filteredItems,
       totalAmount,
       tokenNumber: newToken,
       status: "pending",
