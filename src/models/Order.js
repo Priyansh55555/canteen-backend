@@ -12,7 +12,7 @@ const orderSchema = new mongoose.Schema({
   tokenNumber: Number,
   status: {
     type: String,
-    enum: ["pending", "processing", "ready", "completed"],
+    enum: ["pending", "preparing", "ready", "completed", "cancelled"], 
     default: "pending"
   }
 }, { timestamps: true });
