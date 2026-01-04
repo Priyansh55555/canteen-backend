@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import mongoose from "mongoose";
+import http from "http";
+import { Server } from "socket.io";
 import app from "./app.js";
 
 const PORT = process.env.PORT || 5000;
@@ -23,36 +25,73 @@ mongoose
   });
 
 // -------------------------------------------------------------
-// 2) START EXPRESS SERVER
+// 2) CREATE HTTP SERVER
 // -------------------------------------------------------------
-const server = app.listen(PORT, () => {
+const server = http.createServer(app);
+
+// -------------------------------------------------------------
+// 3) SOCKET.IO SETUP
+// -------------------------------------------------------------
+const io = new Server(server, {
+  cors: {
+    origin: process.env.FORONTENT_URL || "http://localhost:5173",
+    credentials: true,
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("🔌 Connected:", socket.id);
+
+  socket.on("join", (userId) => {
+    socket.join(userId);
+    console.log(`👤 User joined room: ${userId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ Disconnected:", socket.id);
+  });
+});
+
+// -------------------------------------------------------------
+// 4) START SERVER
+// -------------------------------------------------------------
+server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
 // -------------------------------------------------------------
-// 3) HANDLE UNEXPECTED ERRORS
+// 5) HANDLE UNEXPECTED ERRORS
 // -------------------------------------------------------------
 
-// Unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   console.error("UNHANDLED REJECTION:", err.message);
   server.close(() => process.exit(1));
 });
 
-// Uncaught exceptions
 process.on("uncaughtException", (err) => {
   console.error("UNCAUGHT EXCEPTION:", err.message);
   process.exit(1);
 });
 
-// Graceful shutdown on Ctrl+C
+// -------------------------------------------------------------
+// 6) GRACEFUL SHUTDOWN
+// -------------------------------------------------------------
 process.on("SIGINT", () => {
   console.log("\n🛑 Shutting down gracefully...");
+
+  io.close(() => {
+    console.log("Socket.IO closed");
+  });
+
   server.close(() => {
-    console.log("Server closed.");
+    console.log("HTTP server closed");
+
     mongoose.connection.close(false, () => {
-      console.log("MongoDB connection closed.");
+      console.log("MongoDB connection closed");
       process.exit(0);
     });
   });
 });
+
+// export io if you need it in controllers
+export { io };

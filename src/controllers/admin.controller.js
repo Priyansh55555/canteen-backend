@@ -3,6 +3,7 @@ import Order from "../models/Order.js";
 import Token from "../models/Token.js";
 import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
 import cloudinary from "../config/cloudinary.js";
+import { io } from "../server.js";
 
 // ---------------------------------------------------------
 // 1) CREATE FOOD ITEM
@@ -138,26 +139,55 @@ export const updateOrderStatus = async (req, res) => {
 
     const validStatus = ["pending", "preparing", "ready", "completed", "cancelled"];
     if (!validStatus.includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid status" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status",
+      });
     }
 
-    const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
+    const order = await Order.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
-    // Update token status as well
     const tokenStatusMap = {
       pending: "waiting",
-      processing: "waiting",
+      preparing: "waiting",
       ready: "serving",
       completed: "completed",
+      cancelled: "cancelled",
     };
 
-    await Token.findOneAndUpdate({ orderId: order._id }, { status: tokenStatusMap[status] });
+    await Token.findOneAndUpdate(
+      { orderId: order._id },
+      { status: tokenStatusMap[status] }
+    );
 
-    res.json({ success: true, message: "Order status updated", order });
+    // 🔴 SEND LIVE UPDATE TO USER
+    io.to(order.userId.toString()).emit("order-status-updated", {
+      orderId: order._id,
+      tokenNumber: order.tokenNumber,
+      status: order.status,
+      updatedAt: order.updatedAt,
+    });
+
+    return res.json({
+      success: true,
+      message: "Order status updated",
+      order,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
