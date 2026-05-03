@@ -10,7 +10,7 @@ import { io } from "../server.js";
 // ---------------------------------------------------------
 export const createFoodItem = async (req, res) => {
   try {
-    const { name, price, category, description, isAvailable } = req.body;
+    const { name, price, category, description, isAvailable, canShowWithoutLogin } = req.body;
 
     let imageUrl = "";
     if (req.file) {
@@ -25,6 +25,7 @@ export const createFoodItem = async (req, res) => {
       description,
       isAvailable,
       image: imageUrl,
+      canShowWithoutLogin: canShowWithoutLogin
     });
 
     res.status(201).json({
@@ -49,13 +50,15 @@ export const updateFoodItem = async (req, res) => {
       return res.status(404).json({ success: false, message: "MenuItem not found" });
     }
 
-    const { name, price, category, description, isAvailable } = req.body;
+    const { name, price, category, description, isAvailable, canShowWithoutLogin } = req.body;
 
+    console.log("canShowWithoutLogin",canShowWithoutLogin)
     // Update fields
     food.name = name || food.name;
     food.price = price || food.price;
     food.category = category || food.category;
     food.description = description || food.description;
+    food.canShowWithoutLogin = canShowWithoutLogin || food.canShowWithoutLogin;
     if (isAvailable !== undefined) food.isAvailable = isAvailable;
 
     // If new image uploaded, replace old one
