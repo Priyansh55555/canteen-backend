@@ -11,3 +11,15 @@ export const uploadToCloudinary = async (fileBuffer) => {
     ).end(fileBuffer);
   });
 };
+
+export const uploadToCloudinaryByUserId = async (fileBuffer, userId) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: `userId/${userId}` },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    ).end(fileBuffer);
+  });
+};
