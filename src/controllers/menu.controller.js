@@ -1,11 +1,29 @@
 import MenuItem from "../models/MenuItem.js";
 
 // -------------------------------------------
-// Get all menu items
+// Get all menu itemsP
 // -------------------------------------------
 export const getAllMenuItems = async (req, res) => {
   try {
     const items = await MenuItem.find().sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: items.length,
+      data: items,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch menu items",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllMenuLandingPage = async (req, res) => {
+  try {
+    const items = await MenuItem.find({ canShowWithoutLogin: true }).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
